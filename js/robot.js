@@ -162,7 +162,7 @@ function animate()
     shootDelta = (new Date().getTime() - shootTimer)/1000;
     if(shoot) {
       if(shootDelta > SHOOTDELAY) {
-        c = new circle(robots[i].x,robots[i].y,7*robots[i].heading,20,0,GRAVITY,10,"green");
+        c = new circle(robots[i].x,robots[i].y,7*robots[i].heading,-20,0,GRAVITY,10,"green");
         balls.push(c);
         shootTimer = Date.now();
       }
@@ -252,7 +252,7 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  robo = new rectangle(60,100,40,40,0,0,"blue");
+  robo = new rectangle(60,60,40,40,0,0,"blue");
   robots.push(robo);
   goal = new rectangle(600,400,100,20,0,0,"red");
   goal.draw();
