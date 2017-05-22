@@ -3,6 +3,7 @@ var CHEIGHT;
 var ctx;
 var canvas;
 var robots = [];
+var balls = [];
 var raf;
 var lastCalledTime;
 var fps;
@@ -11,12 +12,19 @@ var GRAVITY = 0.5;
 var FRICTION = 0.4;
 var AIRRESISTANCE = 0.1;
 var MOVESPEED = 5;
-var JUMPSPEED = 20;
+var JUMPSPEED = 17;
 var MAXSPEED = 10;
 var up = false;
 var down = false;
 var right = false;
 var left = false;
+var shoot = false;
+var SHOOTDELAY = 0.25;
+var shootTimer;
+var shootDelta;
+var BOUNCE_CONSTANT = 0.8;
+var goal;
+var score = 0;
 
 function rectangle(x,y,w,h,vx,vy,color) {
   this.x = x;
@@ -27,17 +35,51 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.vy = vy;
   this.color = color;
   this.airborne = false;
+  this.heading = 1;
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
   }
 }
 
+function circle(x, y, vx, vy, ax, ay, radius, color){
+  this.x = x;
+  this.y = y;
+  this.vx = vx;
+  this.vy = vy;
+  this.ax = ax;
+  this.ay = ay;
+  this.radius = radius;
+  this.color = color;
+  this.draw = function()
+  {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, true);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+  }
+  this.velocityMag = function()
+  {
+    return Math.sqrt(pow(vx,2) + pow(vy,2));
+  }
+  this.velocityDir = function()
+  {
+    return this.vx > 0 ? atan(this.vy, this.vx) : atan(this.vy, this.vx) + Math.PI;
+  }
+}
+
+function collision(circlea, circleb)
+{
+  //basic collision detection
+  return Math.abs(circlea.x-circleb.x) <= Math.max(circlea.radius, circleb.radius) && Math.abs(circlea.y - circleb.y) <= Math.max(circlea.radius, circleb.radius);
+}
+
 function animate()
 {
   if(!lastCalledTime) {
-     lastCalledTime = Date.now();
-     fps = 0;
+    lastCalledTime = Date.now();
+    fps = 0;
   }
   delta = (new Date().getTime() - lastCalledTime)/1000;
   lastCalledTime = Date.now();
@@ -46,6 +88,8 @@ function animate()
   ctx.font = "10px Arial";
   ctx.clearRect(0,0, CWIDTH, CHEIGHT);
   ctx.fillText("FPS: " + Math.round(fps), CWIDTH - 60, 10);
+  ctx.font = "20px Arial";
+  ctx.fillText("Score: " + score,CWIDTH/2,30);
 
   for (var i = 0; i < robots.length; i++)
   {
@@ -66,28 +110,7 @@ function animate()
     else if(robots[i].x + robots[i].w > CWIDTH) {
       robots[i].x = CWIDTH-robots[i].w;
       robots[i].vx = 0;
-
     }
-
-
-    /*window.onkeydown = function (e) {
-      var code = e.keyCode ? e.keyCode : e.which;
-      if (code === 38) { //up key
-        if(!robots[0].airborne) {
-          robots[0].vy-=JUMPSPEED;
-        }
-      } if (code === 40) { //down key
-        //robots[0].vy+=3;
-      } if (code === 39) { //right key
-        if(!robots[0].airborne) {
-          robots[0].vx+=MOVESPEED;
-        }
-      } if (code === 37) { //left key
-        if(!robots[0].airborne) {
-          robots[0].vx-=MOVESPEED;
-        }
-      }
-    };*/
 
     if(!robots[0].airborne) {
       if(up) {
@@ -95,9 +118,11 @@ function animate()
       }
       if(right) {
         robots[0].vx += MOVESPEED;
+        robots[0].heading = 1;
       }
       if(left) {
         robots[0].vx -= MOVESPEED;
+        robots[0].heading = -1;
       }
     }
 
@@ -130,38 +155,93 @@ function animate()
     robots[i].y += robots[i].vy;
 
     robots[i].draw();
-  }
 
+    if(!shootTimer) {
+      shootTimer = Date.now();
+    }
+    shootDelta = (new Date().getTime() - shootTimer)/1000;
+    if(shoot) {
+      if(shootDelta > SHOOTDELAY) {
+        c = new circle(robots[i].x,robots[i].y,7*robots[i].heading,20,0,GRAVITY,10,"green");
+        balls.push(c);
+        shootTimer = Date.now();
+      }
+    }
+  }
+  for (var i = 0; i < balls.length; i++) {
+
+    if(balls[i].x>goal.x && balls[i].x<goal.x+goal.w && balls[i].y>goal.y && balls[i].y<goal.y+goal.h) {
+      score += 5;
+      balls.splice(i,1);
+      i--;
+    }
+    else {
+      balls[i].vx += balls[i].ax;
+      balls[i].vy += balls[i].ay;
+
+      if(balls[i].y + balls[i].vy > CHEIGHT-balls[i].radius || balls[i].y + balls[i].vy < balls[i].radius) {
+        if(balls[i].y + balls[i].vy > CHEIGHT-balls[i].radius)
+        balls[i].y = CHEIGHT-balls[i].radius; //Adds 1 extra frame of being at the bottom, makes for smoother rolling.
+        balls[i].vy *= -1*BOUNCE_CONSTANT;
+      }
+      if(balls[i].x + balls[i].vx > CWIDTH-balls[i].radius || balls[i].x + balls[i].vx < balls[i].radius) {
+        balls[i].vx *= -1*BOUNCE_CONSTANT;
+      }
+
+      for(var j = i+1; j < balls.length; j++) {
+        if(collision(balls[i], balls[j])) {
+          var tevy = balls[i].vy
+          var tevx = balls[i].vx;
+          balls[i].vy = balls[j].vy - 0.2*balls[i].vy;
+          balls[j].vy = tevy - 0.2*balls[j].vy;
+          balls[i].vx = balls[j].vx - 0.2*balls[i].vx;
+          balls[j].vx = tevx - 0.2*balls[j].vx;
+        }
+      }
+
+      balls[i].x += balls[i].vx;
+      balls[i].y += balls[i].vy;
+
+      balls[i].draw();
+    }
+  }
+  goal.draw();
   raf = window.requestAnimationFrame(animate);
 }
 $(document.body).keydown(function (evt) {
   var code = evt.keyCode;
-  if (code === 38) { //up key
+  if (code === 87) { //w key
     up = true;
   }
-  if (code === 40) { //down key
+  if (code === 83) { //s key
     down = true;
   }
-  if (code === 39) { //right key
+  if (code === 68) { //d key
     right = true;
   }
-  if (code === 37) { //left key
+  if (code === 65) { //a key
     left = true;
+  }
+  if (code === 69) { //e key
+    shoot = true;
   }
 });
 $(document.body).keyup(function (evt) {
   var code = evt.keyCode
-  if (code === 38) { //up key
+  if (code === 87) { //up key
     up = false;
   }
-  if (code === 40) { //down key
+  if (code === 83) { //down key
     down = false;
   }
-  if (code === 39) { //right key
+  if (code === 68) { //right key
     right = false;
   }
-  if (code === 37) { //left key
+  if (code === 65) { //left key
     left = false;
+  }
+  if (code === 69) {
+    shoot = false;
   }
 });
 
@@ -172,8 +252,9 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  robo = new rectangle(60,60,40,40,0,0,"blue");
+  robo = new rectangle(60,100,40,40,0,0,"blue");
   robots.push(robo);
-
+  goal = new rectangle(600,400,100,20,0,0,"red");
+  goal.draw();
   raf = window.requestAnimationFrame(animate);
 });
