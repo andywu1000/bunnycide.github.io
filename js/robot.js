@@ -11,7 +11,7 @@ var delta;
 var GRAVITY = 0.5;
 var FRICTION = 0.4;
 var AIRRESISTANCE = 0.1;
-var MOVESPEED = 5;
+var MOVESPEED = 3;
 var JUMPSPEED = 17;
 var MAXSPEED = 10;
 var up = false;
@@ -25,6 +25,9 @@ var shootDelta;
 var BOUNCE_CONSTANT = 0.8;
 var goal;
 var score = 0;
+var COLLISION_CONSTANT = 0.8;
+var BALL_FRICTION = 0.01;
+var RADIUS = 10;
 
 function rectangle(x,y,w,h,vx,vy,color) {
   this.x = x;
@@ -36,13 +39,14 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.color = color;
   this.airborne = false;
   this.heading = 1;
+  this.ball = 3;
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
   }
 }
 
-function circle(x, y, vx, vy, ax, ay, radius, color){
+function circle(x, y, vx, vy, ax, ay, radius, color) {
   this.x = x;
   this.y = y;
   this.vx = vx;
@@ -51,32 +55,35 @@ function circle(x, y, vx, vy, ax, ay, radius, color){
   this.ay = ay;
   this.radius = radius;
   this.color = color;
-  this.draw = function()
-  {
+  this.draw = function() {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, true);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.closePath();
   }
-  this.velocityMag = function()
-  {
-    return Math.sqrt(pow(vx,2) + pow(vy,2));
-  }
-  this.velocityDir = function()
-  {
-    return this.vx > 0 ? atan(this.vy, this.vx) : atan(this.vy, this.vx) + Math.PI;
-  }
 }
 
-function collision(circlea, circleb)
-{
-  //basic collision detection
-  return Math.abs(circlea.x-circleb.x) <= Math.max(circlea.radius, circleb.radius) && Math.abs(circlea.y - circleb.y) <= Math.max(circlea.radius, circleb.radius);
+function collision(circlea, circleb) {
+  return Math.abs(circlea.x-circleb.x) <= circlea.radius + circleb.radius && Math.abs(circlea.y - circleb.y) <= circlea.radius + circleb.radius;
+}
+
+function collisionr(circlea, rectb) {
+  return circlea.x-circlea.radius<=rectb.x+rectb.w&&circlea.x+circlea.radius>=rectb.x && circlea.y-circlea.radius<=rectb.y+rectb.h&&circlea.y+circlea.radius>=rectb.y;
+}
+
+function angle(circlea, circleb) {
+  //alert(circlea.x-circleb.x > 0 ? Math.atan2(circlea.y-circleb.y, circlea.x-circleb.x) : Math.atan2(circlea.y-circleb.y, circlea.x-circleb.x) + Math.PI);
+  return circlea.x-circleb.x > 0 ? Math.atan2(circlea.y-circleb.y, circlea.x-circleb.x) : Math.atan2(circlea.y-circleb.y, circlea.x-circleb.x) + Math.PI;
+}
+
+function distance(circlea, circleb) {
+  return Math.sqrt(Math.pow(circlea.x-circleb.x,2)+Math.pow(circlea.y-circleb.y,2));
 }
 
 function animate()
 {
+  ctx.fillStyle = "black";
   if(!lastCalledTime) {
     lastCalledTime = Date.now();
     fps = 0;
@@ -90,6 +97,8 @@ function animate()
   ctx.fillText("FPS: " + Math.round(fps), CWIDTH - 60, 10);
   ctx.font = "20px Arial";
   ctx.fillText("Score: " + score,CWIDTH/2,30);
+
+  goal.draw();
 
   for (var i = 0; i < robots.length; i++)
   {
@@ -160,52 +169,89 @@ function animate()
       shootTimer = Date.now();
     }
     shootDelta = (new Date().getTime() - shootTimer)/1000;
-    if(shoot) {
+    if(shoot && robots[i].ball > 0) {
       if(shootDelta > SHOOTDELAY) {
-        c = new circle(robots[i].x,robots[i].y,7*robots[i].heading,-20,0,GRAVITY,10,"green");
+        if(robots[i].heading == 1) {
+          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,7,-20,0,GRAVITY,10,"green");
+        }
+        else {
+          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-7,-20,0,GRAVITY,10,"green");
+        }
         balls.push(c);
+        robots[i].ball--;
         shootTimer = Date.now();
       }
     }
   }
   for (var i = 0; i < balls.length; i++) {
 
-    if(balls[i].x>goal.x && balls[i].x<goal.x+goal.w && balls[i].y>goal.y && balls[i].y<goal.y+goal.h) {
-      score += 5;
+    if(collisionr(balls[i],robots[0])) {
+      robots[0].ball++;
       balls.splice(i,1);
       i--;
     }
     else {
-      balls[i].vx += balls[i].ax;
-      balls[i].vy += balls[i].ay;
+      if(collisionr(balls[i],goal)) {
+        score += 5;
+        if(balls[i].x<goal.x+goal.w/2) {
+          balls[i].vx = -balls[i].vy;
+          balls[i].vy = -balls[i].vx;
+        }
+        else {
+          balls[i].vx = balls[i].vy;
+          balls[i].vy = balls[i].vx;
+        }
+        //balls.splice(i,1);
+        //i--;
+      }
+      if(balls[i].vx > 0) {
+        balls[i].vx -= BALL_FRICTION;
+        if(balls[i].vx < 0) {
+          balls[i].vx = 0;
+        }
+      }
+      else if(balls[i].vx < 0) {
+        balls[i].vx += BALL_FRICTION;
+        if(balls[i].vx > 0) {
+          balls[i].vx = 0;
+        }
+      }
+      balls[i].vy += GRAVITY;
 
-      if(balls[i].y + balls[i].vy > CHEIGHT-balls[i].radius || balls[i].y + balls[i].vy < balls[i].radius) {
-        if(balls[i].y + balls[i].vy > CHEIGHT-balls[i].radius)
-        balls[i].y = CHEIGHT-balls[i].radius; //Adds 1 extra frame of being at the bottom, makes for smoother rolling.
+      if(balls[i].y + balls[i].vy > CHEIGHT-balls[i].radius) {
+        balls[i].y = CHEIGHT-balls[i].radius;
         balls[i].vy *= -1*BOUNCE_CONSTANT;
       }
       if(balls[i].x + balls[i].vx > CWIDTH-balls[i].radius || balls[i].x + balls[i].vx < balls[i].radius) {
         balls[i].vx *= -1*BOUNCE_CONSTANT;
       }
-
       for(var j = i+1; j < balls.length; j++) {
         if(collision(balls[i], balls[j])) {
           var tevy = balls[i].vy
           var tevx = balls[i].vx;
-          balls[i].vy = balls[j].vy - 0.2*balls[i].vy;
+          /*balls[i].vy = balls[j].vy - 0.2*balls[i].vy;
           balls[j].vy = tevy - 0.2*balls[j].vy;
           balls[i].vx = balls[j].vx - 0.2*balls[i].vx;
-          balls[j].vx = tevx - 0.2*balls[j].vx;
+          balls[j].vx = tevx - 0.2*balls[j].vx;*/
+          balls[i].vy = balls[j].vy*COLLISION_CONSTANT;
+          balls[j].vy = tevy*COLLISION_CONSTANT;
+          balls[i].vx = balls[j].vx*COLLISION_CONSTANT;
+          balls[j].vx = tevx*COLLISION_CONSTANT;
         }
       }
-
       balls[i].x += balls[i].vx;
       balls[i].y += balls[i].vy;
+      /*for(var j = i+1; j < balls.length; j++) {
+        if(collision(balls[i], balls[j])) {
+          balls[i].x = 2*RADIUS*Math.cos(angle(balls[i],balls[j]))+balls[j].x;
+          balls[i].y = 2*RADIUS*Math.sin(angle(balls[i],balls[j]))+balls[j].y;
+
+        }
+      }*/
 
       balls[i].draw();
     }
   }
-  goal.draw();
   raf = window.requestAnimationFrame(animate);
 }
 $(document.body).keydown(function (evt) {
@@ -252,9 +298,13 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
+  goal = new rectangle(600,350,100,10,0,0,"red");
+  goal.draw();
   robo = new rectangle(60,60,40,40,0,0,"blue");
   robots.push(robo);
-  goal = new rectangle(600,400,100,20,0,0,"red");
-  goal.draw();
+  b = new circle(CWIDTH-60,60,0,0,0,GRAVITY,10,"green");
+  c = new circle(CWIDTH-100,60,0,0,0,GRAVITY,10,"green");
+  balls.push(b);
+  balls.push(c);
   raf = window.requestAnimationFrame(animate);
 });
