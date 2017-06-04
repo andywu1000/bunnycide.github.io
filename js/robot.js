@@ -27,6 +27,7 @@ var score = 0;
 var COLLISION_CONSTANT = 0.8;
 var BALL_FRICTION = 0.01;
 var RADIUS = 10;
+var images = {};
 
 function rectangle(x,y,w,h,vx,vy,color) {
   this.x = x;
@@ -108,6 +109,15 @@ function getRandom(min, max) {
 
 function distance(circlea, circleb) {
   return Math.sqrt(Math.pow(circlea.x-circleb.x,2)+Math.pow(circlea.y-circleb.y,2));
+}
+
+function loadImage(name) {
+
+  images[name] = new Image();
+  images[name].onload = function() { 
+      resourceLoaded();
+  }
+  images[name].src = "images/" + name + ".png";
 }
 
 function animate()
