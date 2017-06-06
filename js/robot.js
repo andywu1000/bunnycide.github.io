@@ -22,8 +22,10 @@ var shoot = false;
 var SHOOTDELAY = 0.25;
 var shootDelta;
 var BOUNCE_CONSTANT = 0.5;
-var goal;
-var score = 0;
+var goal1;
+var goal2;
+var bluescore = 0;
+var redscore = 0;
 var COLLISION_CONSTANT = 0.8;
 var BALL_FRICTION = 0.01;
 var RADIUS = 10;
@@ -92,21 +94,21 @@ function collisionr(circlea, rectb) {
   return circlea.x-circlea.radius<=rectb.x+rectb.w&&circlea.x+circlea.radius>=rectb.x && circlea.y-circlea.radius<=rectb.y+rectb.h&&circlea.y+circlea.radius>=rectb.y;
 }
 
-function collisionl(circlea) {
-  if(circlea.x+circlea.radius>=goal.x&&circlea.x-circlea.radius<=goal.x+goal.w&&circlea.y+circlea.radius>=goal.y&&circlea.y-circlea.radius<=goal.y+goal.w/2) {
-    for(i = 0;i<goal.w/2;i++) {
-      if(circlea.y+circlea.radius>=goal.y+i && circlea.y-circlea.radius<=goal.y+i) {
-        if(circlea.x+circlea.radius>=goal.x+goal.w/2-i && circlea.x-circlea.radius<=goal.x +goal.w/2-i) {
-          return true;
-        }
-        else if(circlea.x+circlea.radius>=goal.x+goal.w/2+i && circlea.x-circlea.radius<=goal.x+goal.w/2+i) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
+// function collisionl(circlea) {
+//   if(circlea.x+circlea.radius>=goal.x&&circlea.x-circlea.radius<=goal.x+goal.w&&circlea.y+circlea.radius>=goal.y&&circlea.y-circlea.radius<=goal.y+goal.w/2) {
+//     for(i = 0;i<goal.w/2;i++) {
+//       if(circlea.y+circlea.radius>=goal.y+i && circlea.y-circlea.radius<=goal.y+i) {
+//         if(circlea.x+circlea.radius>=goal.x+goal.w/2-i && circlea.x-circlea.radius<=goal.x +goal.w/2-i) {
+//           return true;
+//         }
+//         else if(circlea.x+circlea.radius>=goal.x+goal.w/2+i && circlea.x-circlea.radius<=goal.x+goal.w/2+i) {
+//           return true;
+//         }
+//       }
+//     }
+//   }
+//   return false;
+// }
 
 function collisionrr(recta, rectb) {
   return (recta.x>=rectb.x&&recta.x<=rectb.x+rectb.w||recta.x+recta.w>=rectb.x&&recta.x+recta.w<=rectb.x+rectb.w) && (recta.y>=rectb.y&&recta.y<=rectb.y+rectb.h||recta.y+recta.h>=rectb.y&&recta.y+recta.h<=rectb.y+rectb.h);
@@ -151,7 +153,8 @@ function animate()
   ctx.clearRect(0,0, CWIDTH, CHEIGHT);
   ctx.fillText("FPS: " + Math.round(fps), CWIDTH - 60, 10);
   ctx.font = "20px Arial";
-  ctx.fillText("Score: " + score,CWIDTH/2,30);
+  ctx.fillText("Blue: " + bluescore,CWIDTH/3,30);
+  ctx.fillText("Red: " + redscore,CWIDTH - CWIDTH/3,30);
 
   // ctx.fillStyle = "gray";
   // ctx.beginPath();
@@ -163,7 +166,8 @@ function animate()
   // ctx.lineTo(goal.x+goal.w,goal.y+goal.w/2);
   // ctx.stroke();
 
-  goal.draw();
+  goal1.draw();
+  goal2.draw();
 
   for (var i = 0; i < robots.length; i++)
   {
@@ -260,8 +264,11 @@ function animate()
       i--;
     }
     else {
-      if(collisionr(balls[i],goal)) {
-        score += 5;
+      if(collisionr(balls[i],goal1)) {
+        redscore += 5;
+      }
+      else if(collisionr(balls[i],goal2)) {
+        bluescore += 5;
       }
       // if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
       //   balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
@@ -400,8 +407,10 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  goal = new rectangle(CWIDTH/2 + 60,560,190,10,0,0,"red");
-  goal.draw();
+  goal1 = new rectangle(CWIDTH/2 + 60,CHEIGHT - 375,190,10,0,0,"red");
+  goal2 = new rectangle(CWIDTH/2 - 250 ,CHEIGHT - 375,190,10,0,0, "blue");
+  goal1.draw();
+  goal2.draw();
   robo = new robot(60,60,40,40,0,0,"blue");
   robo2 = new robot(CWIDTH-100,60,40,40,0,0,"red");
   robots.push(robo);
