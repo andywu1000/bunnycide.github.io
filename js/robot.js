@@ -8,7 +8,7 @@ var raf;
 var lastCalledTime;
 var fps;
 var delta;
-var GRAVITY = 0.5;
+var GRAVITY = .5;
 var FRICTION = 0.4;
 var AIRRESISTANCE = 0.1;
 var MOVESPEED = 3;
@@ -21,7 +21,7 @@ var left = false;
 var shoot = false;
 var SHOOTDELAY = 0.25;
 var shootDelta;
-var BOUNCE_CONSTANT = 0.8;
+var BOUNCE_CONSTANT = 0.5;
 var goal;
 var score = 0;
 var COLLISION_CONSTANT = 0.8;
@@ -46,9 +46,23 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.right = false;
   this.shoot = false;
   this.shootTimer = Date.now();
+  this.previousr = false;
   this.draw = function() {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x,this.y,this.w,this.h);
+  }
+}
+
+function robot(x,y,w,h,vx,vy,color) {
+  rectangle.apply(this, arguments);
+  this.draw = function() {
+    if(this.right == true){
+      loadImage(this.color + "robot" + this.ball + "right", this.x - 50, this.y - 110, 150, 150);
+      previousr = true;
+    }
+    else  {
+      loadImage(this.color + "robot" + this.ball + "left", this.x - 50, this.y - 110, 150, 150);
+    }
   }
 }
 
@@ -111,17 +125,19 @@ function distance(circlea, circleb) {
   return Math.sqrt(Math.pow(circlea.x-circleb.x,2)+Math.pow(circlea.y-circleb.y,2));
 }
 
-function loadImage(name) {
+function loadImage(name, x, y, sizex, sizey) {
 
   images[name] = new Image();
   images[name].onload = function() { 
-      resourceLoaded();
-  }
+      ctx.drawImage(images[name], x, y, sizex, sizey);
+  };
   images[name].src = "images/" + name + ".png";
 }
 
 function animate()
 {
+  loadImage("centervortex", CWIDTH/2 - 250, CHEIGHT - 500, 500,500);
+
   ctx.fillStyle = "black";
   if(!lastCalledTime) {
     lastCalledTime = Date.now();
@@ -137,15 +153,15 @@ function animate()
   ctx.font = "20px Arial";
   ctx.fillText("Score: " + score,CWIDTH/2,30);
 
-  ctx.fillStyle = "gray";
-  ctx.beginPath();
-  ctx.moveTo(goal.x+goal.w/2,goal.y+1);
-  ctx.lineTo(goal.x,goal.y+goal.w/2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(goal.x+goal.w/2,goal.y+1);
-  ctx.lineTo(goal.x+goal.w,goal.y+goal.w/2);
-  ctx.stroke();
+  // ctx.fillStyle = "gray";
+  // ctx.beginPath();
+  // ctx.moveTo(goal.x+goal.w/2,goal.y+1);
+  // ctx.lineTo(goal.x,goal.y+goal.w/2);
+  // ctx.stroke();
+  // ctx.beginPath();
+  // ctx.moveTo(goal.x+goal.w/2,goal.y+1);
+  // ctx.lineTo(goal.x+goal.w,goal.y+goal.w/2);
+  // ctx.stroke();
 
   goal.draw();
 
@@ -221,10 +237,10 @@ function animate()
     if(robots[i].shoot && robots[i].ball > 0) {
       if(shootDelta > SHOOTDELAY) {
         if(robots[i].heading == 1) {
-          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(6,8),-getRandom(18,22),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(6,8),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         else {
-          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(6,8),-getRandom(18,22),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(6,8),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         balls.push(c);
         robots[i].ball--;
@@ -247,14 +263,14 @@ function animate()
       if(collisionr(balls[i],goal)) {
         score += 5;
       }
-      if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
-        balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
-        balls[i].vy = balls[i].vx*BOUNCE_CONSTANT*0.8;
-      }
-      else if(collisionl(balls[i])){
-        balls[i].vx = balls[i].vy*BOUNCE_CONSTANT;
-        balls[i].vy = -balls[i].vx*BOUNCE_CONSTANT*0.8;
-      }
+      // if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
+      //   balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
+      //   balls[i].vy = balls[i].vx*BOUNCE_CONSTANT*0.8;
+      // }
+      // else if(collisionl(balls[i])){
+      //   balls[i].vx = balls[i].vy*BOUNCE_CONSTANT;
+      //   balls[i].vy = -balls[i].vx*BOUNCEeada_CONSTANT*0.8;
+      // }
 
       if(balls[i].vx > 0) {
         balls[i].vx -= BALL_FRICTION;
@@ -384,10 +400,10 @@ $(function() {
   CHEIGHT = window.innerHeight - 20;
   canvas.width = CWIDTH;
   canvas.height = CHEIGHT;
-  goal = new rectangle(600,350,100,10,0,0,"red");
+  goal = new rectangle(CWIDTH/2 + 60,560,190,10,0,0,"red");
   goal.draw();
-  robo = new rectangle(60,60,40,40,0,0,"blue");
-  robo2 = new rectangle(CWIDTH-100,60,40,40,0,0,"red");
+  robo = new robot(60,60,40,40,0,0,"blue");
+  robo2 = new robot(CWIDTH-100,60,40,40,0,0,"red");
   robots.push(robo);
   robots.push(robo2);
   a = new circle(CWIDTH-60,60,0,0,0,GRAVITY,10,"blue");
