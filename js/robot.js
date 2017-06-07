@@ -30,6 +30,7 @@ var COLLISION_CONSTANT = 0.8;
 var BALL_FRICTION = 0.01;
 var RADIUS = 10;
 var images = {};
+var scoreDelta;
 
 function rectangle(x,y,w,h,vx,vy,color) {
   this.x = x;
@@ -58,7 +59,7 @@ function rectangle(x,y,w,h,vx,vy,color) {
 function robot(x,y,w,h,vx,vy,color) {
   rectangle.apply(this, arguments);
   this.draw = function() {
-    if(this.right == true){
+    if(this.heading == 1){
       loadImage(this.color + "robot" + this.ball + "right", this.x - 50, this.y - 110, 150, 150);
       previousr = true;
     }
@@ -77,6 +78,7 @@ function circle(x, y, vx, vy, ax, ay, radius, color) {
   this.ay = ay;
   this.radius = radius;
   this.color = color;
+  this.scoreTimer = Date.now();
   this.draw = function() {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2, true);
@@ -130,7 +132,7 @@ function distance(circlea, circleb) {
 function loadImage(name, x, y, sizex, sizey) {
 
   images[name] = new Image();
-  images[name].onload = function() { 
+  images[name].onload = function() {
       ctx.drawImage(images[name], x, y, sizex, sizey);
   };
   images[name].src = "images/" + name + ".png";
@@ -241,10 +243,10 @@ function animate()
     if(robots[i].shoot && robots[i].ball > 0) {
       if(shootDelta > SHOOTDELAY) {
         if(robots[i].heading == 1) {
-          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(6,8),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x+robots[i].w+10.1,robots[i].y-10.1,getRandom(4,6),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         else {
-          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(6,8),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
+          c = new circle(robots[i].x-10.1,robots[i].y-10.1,-getRandom(4,6),-getRandom(20,26),0,GRAVITY,10,robots[i].color);
         }
         balls.push(c);
         robots[i].ball--;
@@ -253,6 +255,7 @@ function animate()
     }
   }
   for (var i = 0; i < balls.length; i++) {
+
     if(collisionr(balls[i],robots[0]) && balls[i].color===robots[0].color) {
       robots[0].ball++;
       balls.splice(i,1);
@@ -264,11 +267,14 @@ function animate()
       i--;
     }
     else {
-      if(collisionr(balls[i],goal1)) {
+      scoreDelta = (new Date().getTime() - balls[i].scoreTimer)/1000;
+      if(collisionr(balls[i],goal1) && scoreDelta > 1) {
         redscore += 5;
+        balls[i].scoreTimer = Date.now();
       }
-      else if(collisionr(balls[i],goal2)) {
+      else if(collisionr(balls[i],goal2) && scoreDelta > 1) {
         bluescore += 5;
+        balls[i].scoreTimer = Date.now();
       }
       // if(balls[i].x<goal.x+goal.w/2&&collisionl(balls[i])) {
       //   balls[i].vx = -balls[i].vy*BOUNCE_CONSTANT;
