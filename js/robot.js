@@ -180,25 +180,25 @@ function animate()
       robots[i].vy += RGRAVITY;
     }
     //change
-      // if(Math.abs(robots[0].x - robots[1].x) < robots[0].w && robots[0].y + robots[0].h > robots[1].y){
-      //   robots[0].over = true;
-      // }
-      // else{
-      //   robots[0].over = false;
-      // }
-      // if(Math.abs(robots[1].x - robots[0].x) < robots[1].w && robots[1].y + robots[1].h > robots[0].y){
-      //   robots[1].over = true;
-      // }
-      // else{
-      //   robots[1].over = false;
-      // }
+      if(Math.abs(robots[0].x - robots[1].x) < robots[0].w && robots[0].y + robots[0].h > robots[1].y){
+        robots[0].over = true;
+      }
+      else{
+        robots[0].over = false;
+      }
+      if(Math.abs(robots[1].x - robots[0].x) < robots[1].w && robots[1].y + robots[1].h > robots[0].y){
+        robots[1].over = true;
+      }
+      else{
+        robots[1].over = false;
+      }
 
-      // if(robots[0].over && robots[0].y + robots[0].h == robots[1].y){
-      //   robots[0].airborne = false;
-      // }
-      // if(robots[1].over && robots[1].y + robots[1].h == robots[0].y){
-      //   robots[1].airborne = false;
-      // }
+      if(robots[0].over && robots[0].y + robots[0].h === robots[1].y-1){
+        robots[0].airborne = false;
+      }
+      if(robots[1].over && robots[1].y + robots[1].h === robots[0].y-1){
+        robots[1].airborne = false;
+      }
       //checks if robot on top of other robot
       //change
     if(robots[i].x < 0) {
