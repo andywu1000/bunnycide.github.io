@@ -130,7 +130,7 @@ function loadImage(name, x, y, sizex, sizey) {
 
   images[name] = new Image();
   images[name].onload = function() {
-      ctx.drawImage(images[name], x, y, sizex, sizey);
+    ctx.drawImage(images[name], x, y, sizex, sizey);
   };
   images[name].src = "images/" + name + ".png";
 }
@@ -180,33 +180,45 @@ function animate()
       robots[i].vy += RGRAVITY;
     }
     //change
-      // if(Math.abs(robots[0].x - robots[1].x) < robots[0].w){
-      //   robots[0].over = true;
-      //   robots[1].over = true;
-      // }
-      // else{
-      //   robots[0].over = false;
-      //   robots[1].over = false;
-      // }
-    
+    // if(Math.abs(robots[0].x - robots[1].x) < robots[0].w){
+    //   robots[0].over = true;
+    //   robots[1].over = true;
+    // }
+    // else{
+    //   robots[0].over = false;
+    //   robots[1].over = false;
+    // }
 
-      // if(robots[0].over && robots[0].y + robots[0].h === robots[1].y - 1){
-      //   robots[0].airborne = false;
-      // }
-      // if(robots[1].over && robots[1].y + robots[1].h === robots[0].y - 1){
-      //   robots[1].airborne = false;
-      // }
-      //checks if robot on top of other robot
-      //change
-      if((robots[0].x + robots[0].w - robots[1].x) >= -20 && (robots[0].x + robots[0].w - robots[1].x ) <= 20 && robots[0].y === robots[1].y){ //rightside 0
-        robots[0].vx -= 40;
-        robots[1].vx += 40;
-      }
-      if((robots[0].x - robots[1].x - robots[1].w) >= -20 && (robots[0].x - robots[1].x - robots[1].w) <= 20 && robots[0].y === robots[1].y){ //leftside 0
-        robots[0].vx += 40;
-        robots[1].vx -= 40;
-      }
 
+    // if(robots[0].over && robots[0].y + robots[0].h === robots[1].y - 1){
+    //   robots[0].airborne = false;
+    // }
+    // if(robots[1].over && robots[1].y + robots[1].h === robots[0].y - 1){
+    //   robots[1].airborne = false;
+    // }
+
+    //checks if robot on top of other robot
+    //change
+    if((robots[0].x + robots[0].w - robots[1].x) >= -50 && (robots[0].x + robots[0].w - robots[1].x ) <= 50 && robots[0].y === robots[1].y){ //rightside 0
+      if(Math.abs(robots[0].vx)>Math.abs(robots[1].vx)) {
+        robots[1].x = robots[0].x+robots[0].w+51;
+      }
+      else {
+        robots[0].x = robots[1].x-robots[0].w-51;
+      }
+      robots[0].vx -= Math.abs(robots[0].vx)*2;
+      robots[1].vx += Math.abs(robots[1].vx)*2;
+    }
+    if((robots[0].x - robots[1].x - robots[1].w) >= -50 && (robots[0].x - robots[1].x - robots[1].w) <= 50 && robots[0].y === robots[1].y){ //leftside 0
+      if(Math.abs(robots[0].vx)>Math.abs(robots[1].vx)) {
+        robots[0].x = robots[1].x+robots[1].w+51;
+      }
+      else {
+        robots[1].x = robots[0].x-robots[0].w-51;
+      }
+      robots[0].vx += Math.abs(robots[0].vx)*2;
+      robots[1].vx -= Math.abs(robots[1].vx)*2;
+    }
 
     if(robots[i].x < 0) {
       robots[i].x = 0;
@@ -216,8 +228,6 @@ function animate()
       robots[i].x = CWIDTH-robots[i].w;
       robots[i].vx = 0;
     }
-
-
 
     if(!robots[i].airborne) {
       if(robots[i].up) {
@@ -444,8 +454,8 @@ $(function() {
   goal2 = new rectangle(CWIDTH/2 - 250 ,CHEIGHT - 375,190,10,0,0, "blue");
   goal1.draw();
   goal2.draw();
-  robo = new robot(60,60,40,40,0,0,"blue");
-  robo2 = new robot(CWIDTH-100,60,40,40,0,0,"red");
+  robo = new robot(60,60,100,40,0,0,"blue");
+  robo2 = new robot(CWIDTH-100,60,100,40,0,0,"red");
   robots.push(robo);
   robots.push(robo2);
   a = new circle(CWIDTH-60,60,0,0,0,GRAVITY,10,"blue");
