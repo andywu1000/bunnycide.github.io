@@ -37,6 +37,7 @@ function rectangle(x,y,w,h,vx,vy,color) {
   this.vy = vy;
   this.color = color;
   this.airborne = false;
+  this.over = false;
   this.heading = 1;
   this.ball = 3;
   this.up = false;
@@ -178,7 +179,28 @@ function animate()
       robots[i].airborne = true;
       robots[i].vy += RGRAVITY;
     }
+    //change
+      if(Math.abs(robots[0].x - robots[1].x) < robots[0].w && robots[0].y + robots[0].h > robots[1].y){
+        robots[0].over = true;
+      }
+      else{
+        robots[0].over = false;
+      }
+      if(Math.abs(robots[1].x - robots[0].x) < robots[1].w && robots[1].y + robots[1].h > robots[0].y){
+        robots[1].over = true;
+      }
+      else{
+        robots[1].over = false;
+      }
 
+      if(robots[0].over && robots[0].y + robots[0].h = robots[1].y){
+        robots[0].airborne = false;
+      }
+      if(robots[1].over && robots[1].y + robots[1].h = robots[0].y){
+        robots[1].airborne = false;
+      }
+      //checks if robot on top of other robot
+      //change
     if(robots[i].x < 0) {
       robots[i].x = 0;
       robots[i].vx = 0;
@@ -187,6 +209,8 @@ function animate()
       robots[i].x = CWIDTH-robots[i].w;
       robots[i].vx = 0;
     }
+
+
 
     if(!robots[i].airborne) {
       if(robots[i].up) {
