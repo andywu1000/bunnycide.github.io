@@ -9,16 +9,12 @@ var lastCalledTime;
 var fps;
 var delta;
 var GRAVITY = .5;
-var FRICTION = 0.4;
+var RGRAVITY = 0.8;
+var FRICTION = 0.7;
 var AIRRESISTANCE = 0.1;
 var MOVESPEED = 3;
-var JUMPSPEED = 17;
-var MAXSPEED = 10;
-var up = false;
-var down = false;
-var right = false;
-var left = false;
-var shoot = false;
+var JUMPSPEED = 20;
+var MAXSPEED = 15;
 var SHOOTDELAY = 0.25;
 var shootDelta;
 var BOUNCE_CONSTANT = 0.5;
@@ -180,7 +176,7 @@ function animate()
     }
     else {
       robots[i].airborne = true;
-      robots[i].vy += GRAVITY;
+      robots[i].vy += RGRAVITY;
     }
 
     if(robots[i].x < 0) {
