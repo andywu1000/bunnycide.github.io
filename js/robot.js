@@ -199,12 +199,12 @@ function animate()
       //checks if robot on top of other robot
       //change
       if((robots[1].x-robots[0].x - robots[0].w) <= 10 && (robots[1].x-robots[0].x - robots[0].w) >= 0){ //rightside 0
-        robots[0].x -= 40;
-        robots[1].x += 40;
+        robots[0].vx -= 40;
+        robots[1].vx += 40;
       }
       if((robots[0].x - robots[1].x - robots[1].w) <= 10 && (robots[0].x - robots[1].x - robots[1].w) >= 0){ //leftside 0
-        robots[0].x += 40;
-        robots[1].x -= 40;
+        robots[0].vx += 40;
+        robots[1].vx -= 40;
       }
 
 
