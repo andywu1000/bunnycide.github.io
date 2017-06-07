@@ -193,10 +193,10 @@ function animate()
         robots[1].over = false;
       }
 
-      if(robots[0].over && robots[0].y + robots[0].h = robots[1].y){
+      if(robots[0].over && robots[0].y + robots[0].h == robots[1].y){
         robots[0].airborne = false;
       }
-      if(robots[1].over && robots[1].y + robots[1].h = robots[0].y){
+      if(robots[1].over && robots[1].y + robots[1].h == robots[0].y){
         robots[1].airborne = false;
       }
       //checks if robot on top of other robot
